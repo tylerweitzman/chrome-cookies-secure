@@ -49,22 +49,25 @@ function decrypt(key, encryptedData) {
 	return decoded.toString('utf8');
 }
 
-function getDerivedKey(callback) {
+function getDerivedKey(browser, callback) {
 
 	let keytar,
-		chromePassword;
+		password;
 
 	if (process.platform === 'darwin') {
 
 		keytar = require('keytar');
-		keytar.getPassword('Chrome Safe Storage', 'Chrome').then(function(chromePassword) {
-			crypto.pbkdf2(chromePassword, SALT, ITERATIONS, KEYLENGTH, 'sha1', callback);
+		const keychainService = browser === 'edge' ? 'Microsoft Edge Safe Storage' : 'Chrome Safe Storage';
+		const keychainAccount = browser === 'edge' ? 'Microsoft Edge' : 'Chrome';
+		
+		keytar.getPassword(keychainService, keychainAccount).then(function(password) {
+			crypto.pbkdf2(password, SALT, ITERATIONS, KEYLENGTH, 'sha1', callback);
 		});
 
 	} else if (process.platform === 'linux') {
 
-		chromePassword = 'peanuts';
-		crypto.pbkdf2(chromePassword, SALT, ITERATIONS, KEYLENGTH, 'sha1', callback);
+		password = 'peanuts';
+		crypto.pbkdf2(password, SALT, ITERATIONS, KEYLENGTH, 'sha1', callback);
 
 	} else if (process.platform === 'win32') {
 
@@ -115,7 +118,7 @@ const caterForCookiesInPath = (path) => {
 /**
  * Converts profileOrPath argument into a path
  */
-const getPath = (profileOrPath) => {
+const getPath = (profileOrPath, browser = 'chrome') => {
 	if (isPathFormat(profileOrPath)) {
 
 		const path = caterForCookiesInPath(profileOrPath)
@@ -131,25 +134,68 @@ const getPath = (profileOrPath) => {
 	const profile = profileOrPath || defaultProfile;
 
 	if (process.platform === 'darwin') {
-		return process.env.HOME + `/Library/Application Support/Google/Chrome/${profile}/Cookies`;
+		if (browser === 'edge') {
+			return process.env.HOME + `/Library/Application Support/Microsoft Edge/${profile}/Cookies`;
+		} else {
+			return process.env.HOME + `/Library/Application Support/Google/Chrome/${profile}/Cookies`;
+		}
 	}
 
 	if (process.platform === 'linux') {
-		return process.env.HOME + `/.config/google-chrome/${profile}/Cookies`;
+		if (browser === 'edge') {
+			return process.env.HOME + `/.config/microsoft-edge/${profile}/Cookies`;
+		} else {
+			return process.env.HOME + `/.config/google-chrome/${profile}/Cookies`;
+		}
 	}
 
 	if (process.platform === 'win32') {
-		const path = os.homedir() + `\\AppData\\Local\\Google\\Chrome\\User Data\\${profile}\\Network\\Cookies`;
+		let path;
+		
+		if (browser === 'edge') {
+			path = os.homedir() + `\\AppData\\Local\\Microsoft\\Edge\\User Data\\${profile}\\Network\\Cookies`;
+			
+			// Windows has two potential locations for Edge
+			if (fs.existsSync(path)) {
+				return path;
+			}
+			
+			return os.homedir() + `\\AppData\\Local\\Microsoft\\Edge\\User Data\\${profile}\\Cookies`;
+		} else {
+			path = os.homedir() + `\\AppData\\Local\\Google\\Chrome\\User Data\\${profile}\\Network\\Cookies`;
 
-		// Windows has two potential locations
-		if (fs.existsSync(path)) {
-			return path;
+			// Windows has two potential locations for Chrome
+			if (fs.existsSync(path)) {
+				return path;
+			}
+
+			return os.homedir() + `\\AppData\\Local\\Google\\Chrome\\User Data\\${profile}\\Cookies`;
 		}
-
-		return os.homedir() + `\\AppData\\Local\\Google\\Chrome\\User Data\\${profile}\\Cookies`;
 	}
 
 	return new Error('Only Mac, Windows, and Linux are supported.');
+}
+
+const getLocalStatePath = (browser = 'chrome') => {
+	if (process.platform === 'win32') {
+		if (browser === 'edge') {
+			return os.homedir() + '/AppData/Local/Microsoft/Edge/User Data/Local State';
+		} else {
+			return os.homedir() + '/AppData/Local/Google/Chrome/User Data/Local State';
+		}
+	} else if (process.platform === 'darwin') {
+		if (browser === 'edge') {
+			return process.env.HOME + '/Library/Application Support/Microsoft Edge/Local State';
+		} else {
+			return process.env.HOME + '/Library/Application Support/Google/Chrome/Local State';
+		}
+	} else if (process.platform === 'linux') {
+		if (browser === 'edge') {
+			return process.env.HOME + '/.config/microsoft-edge/Local State';
+		} else {
+			return process.env.HOME + '/.config/google-chrome/Local State';
+		}
+	}
 }
 
 // Chromium stores its timestamps in sqlite on the Mac using the Windows Gregorian epoch
@@ -320,10 +366,11 @@ const getOutput = (format, validCookies, domain, uri) => {
  * @param {*} format - the format you want the cookies returned in
  * @param {*} callback -
  * @param {*} profileOrPath - if empty will use the 'Default' profile in default Chrome location; if specified can be an alternative profile name e.g. 'Profile 1' or an absolute path to an alternative user-data-dir
+ * @param {*} browser - which browser to extract cookies from ('chrome' or 'edge'), defaults to 'chrome'
  */
-const getCookies = async (uri, format, callback, profileOrPath) => {
+const getCookies = async (uri, format, callback, profileOrPath, browser = 'chrome') => {
 	setIterations();
-	const path = getPath(profileOrPath);
+	const path = getPath(profileOrPath, browser);
 
 	if (path instanceof Error) {
 		const error = path;
@@ -348,7 +395,7 @@ const getCookies = async (uri, format, callback, profileOrPath) => {
 		dbClosed = false;
 	}
 
-	getDerivedKey(function (err, derivedKey) {
+	getDerivedKey(browser, function (err, derivedKey) {
 
 		if (err) {
 			return callback(err);
@@ -386,7 +433,8 @@ const getCookies = async (uri, format, callback, profileOrPath) => {
 								cookie.value = dpapi.unprotectData(encryptedValue, null, 'CurrentUser').toString('utf-8');
 
 							} else if (encryptedValue[0] == 0x76 && encryptedValue[1] == 0x31 && encryptedValue[2] == 0x30 ){
-								localState = JSON.parse(fs.readFileSync(os.homedir() + '/AppData/Local/Google/Chrome/User Data/Local State'));
+								const localStatePath = getLocalStatePath(browser);
+								localState = JSON.parse(fs.readFileSync(localStatePath));
 								b64encodedKey = localState.os_crypt.encrypted_key;
 								encryptedKey = new Buffer.from(b64encodedKey,'base64');
 								key = dpapi.unprotectData(encryptedKey.slice(5, encryptedKey.length), null, 'CurrentUser');
@@ -463,15 +511,16 @@ const getCookies = async (uri, format, callback, profileOrPath) => {
  * @param {*} uri - the site to retrieve cookies for
  * @param {*} format - the format you want the cookies returned in
  * @param {*} profileOrPath - if empty will use the 'Default' profile in default Chrome location; if specified can be an alternative profile name e.g. 'Profile 1' or an absolute path to an alternative user-data-dir
+ * @param {*} browser - which browser to extract cookies from ('chrome' or 'edge'), defaults to 'chrome'
  */
-const getCookiesPromised = async (uri, format, profileOrPath) => {
+const getCookiesPromised = async (uri, format, profileOrPath, browser = 'chrome') => {
 	return new Promise((resolve, reject) => {
 		getCookies(uri, format, function(err, cookies) {
 			if (err) {
 				return reject(err)
 			}
 			resolve(cookies)
-		}, profileOrPath)
+		}, profileOrPath, browser)
 	})
 }
 

@@ -12,6 +12,8 @@ declare module "chrome-cookies-secure" {
   type Callback<T> = (err: Error, cookies: T) => void;
 
   type CookieFormat = 'object' | 'curl' | 'header' | 'jar' | 'set-cookie' | 'puppeteer'
+  
+  type Browser = 'chrome' | 'edge'
 
   /**
    * getCookies
@@ -22,35 +24,40 @@ declare module "chrome-cookies-secure" {
     url: string,
     format: "object",
     cb: Callback<Record<string, string>>,
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): void;
 
   function getCookies(
     url: string,
     format: "curl" | "header",
     cb: Callback<string>,
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): void;
 
   function getCookies(
     url: string, 
     format: "jar", 
     cb: Callback<Record<string, unknown>>, 
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): void;
 
   function getCookies(
     url: string,
     format: "set-cookie",
     cb: Callback<string[]>,
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): void;
 
   function getCookies(
     url: string,
     format: "puppeteer",
     cb: Callback<PuppeteerCookie[]>,
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): void;
 
   /**
@@ -63,30 +70,35 @@ declare module "chrome-cookies-secure" {
   function getCookiesPromised(
     url: string,
     format: "object",
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): Promise<Record<string, string>>;
 
   function getCookiesPromised(
     url: string,
     format: "curl" | "header",
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): Promise<string>;
 
   function getCookiesPromised(
     url: string, 
     format: "jar", 
     profile?: string,
+    browser?: Browser
   ): Promise<Record<string, unknown>>;
 
   function getCookiesPromised(
     url: string,
     format: "set-cookie",
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): Promise<string[]>;
 
   function getCookiesPromised(
     url: string,
     format: "puppeteer",
-    profile?: string
+    profile?: string,
+    browser?: Browser
   ): Promise<PuppeteerCookie[]>;
 }

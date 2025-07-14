@@ -106,3 +106,73 @@ it('Should getpuppeteer cookies for a path on Linux in puppeteer format', async 
     const cookies = await chrome.getCookiesPromised(url, 'puppeteer', customPath)
     await joi.validate(cookies, puppeteerCookie);
 })
+
+// Edge browser tests
+it('Should get basic cookies from Edge browser', async function () {
+    try {
+        const cookies = await chrome.getCookiesPromised(url, 'object', 'Default', 'edge')
+        await joi.validate(cookies, joi.object());
+    } catch (err) {
+        // Skip test if Edge is not installed or has no cookies
+        if (err.message.includes('not found') || err.message.includes('SQLITE_CANTOPEN')) {
+            this.skip();
+        } else {
+            throw err;
+        }
+    }
+})
+
+it('Should get Edge cookies in puppeteer format', async function () {
+    try {
+        const cookies = await chrome.getCookiesPromised(url, 'puppeteer', 'Default', 'edge')
+        await joi.validate(cookies, puppeteerCookie);
+    } catch (err) {
+        // Skip test if Edge is not installed or has no cookies
+        if (err.message.includes('not found') || err.message.includes('SQLITE_CANTOPEN')) {
+            this.skip();
+        } else {
+            throw err;
+        }
+    }
+})
+
+// Only passes if you are on Windows and have Edge installed
+it('Should get puppeteer cookies for Edge path on Windows', async function () {
+    if (!isWindows) {
+        this.skip();
+    }
+    
+    try {
+        const WINDOWS_PREFIX = os.homedir();
+        const customPath = `${WINDOWS_PREFIX}\\AppData\\Local\\Microsoft\\Edge\\User Data\\Default\\Network\\Cookies`;
+        const cookies = await chrome.getCookiesPromised(url, 'puppeteer', customPath)
+        await joi.validate(cookies, puppeteerCookie);
+    } catch (err) {
+        // Skip test if Edge is not installed or path doesn't exist
+        if (err.message.includes('not found') || err.message.includes('SQLITE_CANTOPEN')) {
+            this.skip();
+        } else {
+            throw err;
+        }
+    }
+})
+
+// Only passes if you are on macOS and have Edge installed
+it('Should get puppeteer cookies for Edge path on macOS', async function () {
+    if (!isMacOS) {
+        this.skip();
+    }
+    
+    try {
+        const customPath = `${process.env.HOME}/Library/Application Support/Microsoft Edge/Default/Cookies`;
+        const cookies = await chrome.getCookiesPromised(url, 'puppeteer', customPath)
+        await joi.validate(cookies, puppeteerCookie);
+    } catch (err) {
+        // Skip test if Edge is not installed or path doesn't exist
+        if (err.message.includes('not found') || err.message.includes('SQLITE_CANTOPEN')) {
+            this.skip();
+        } else {
+            throw err;
+        }
+    }
+})
