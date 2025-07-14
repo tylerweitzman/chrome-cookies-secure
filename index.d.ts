@@ -1,4 +1,4 @@
-declare module "chrome-cookies-secure" {
+declare module "edge-cookies-secure" {
   type PuppeteerCookie = {
     name: string;
     value: string;

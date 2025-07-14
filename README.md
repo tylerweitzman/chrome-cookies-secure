@@ -1,11 +1,11 @@
-# chrome-cookies-secure
+# edge-cookies-secure
 
 Extract encrypted Google Chrome and Microsoft Edge cookies for a url on Mac OS X, Windows, or Linux
 
 ## Installation
 
 ```
-npm install chrome-cookies-secure
+npm install edge-cookies-secure
 ```
 
 ## Optional Dependencies
@@ -54,14 +54,14 @@ basic usage
 -----------
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 chrome.getCookies('https://www.example.com/path/', function(err, cookies) {
 	console.log(cookies);
 });
 ```
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 const cookies = await chrome.getCookiesPromised('https://www.example.com/path/', 'jar')
 ```
 
@@ -69,14 +69,14 @@ basic usage with Microsoft Edge
 -----------
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 chrome.getCookies('https://www.example.com/path/', function(err, cookies) {
 	console.log(cookies);
 }, 'Default', 'edge');
 ```
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 const cookies = await chrome.getCookiesPromised('https://www.example.com/path/', 'jar', 'Default', 'edge')
 ```
 
@@ -84,7 +84,7 @@ puppeteer with specific Chrome profile
 ---------------------
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 const puppeteer = require('puppeteer');
 
 const url = 'https://www.yourUrl.com/';
@@ -118,7 +118,7 @@ puppeteer with Microsoft Edge profile
 ---------------------
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 const puppeteer = require('puppeteer');
 
 const url = 'https://www.yourUrl.com/';
@@ -152,7 +152,7 @@ Calling using async/await
 ---------------------
 
 ```javascript
-const chrome = require('chrome-cookies-secure');
+const chrome = require('edge-cookies-secure');
 const url = 'https://www.yourUrl.com/';
 
 const myFunction = async () => {
@@ -170,8 +170,8 @@ const myFunction = async () => {
 
 On OS X, this module requires Keychain Access to read the browser encryption key. The first time you use it, it will popup a dialog asking for permission:
 
-- For Chrome: "chrome-cookies-secure wants to use your confidential information stored in 'Chrome Safe Storage' in your keychain."
-- For Edge: "chrome-cookies-secure wants to use your confidential information stored in 'Microsoft Edge Safe Storage' in your keychain."
+- For Chrome: "edge-cookies-secure wants to use your confidential information stored in 'Chrome Safe Storage' in your keychain."
+- For Edge: "edge-cookies-secure wants to use your confidential information stored in 'Microsoft Edge Safe Storage' in your keychain."
 
 ![image](https://raw.githubusercontent.com/bertrandom/chrome-cookies-secure/gh-pages/access.png)
 
@@ -184,8 +184,12 @@ The SQLite database that browsers store cookies in is only persisted every 30 se
 
 The module automatically detects the correct cookie storage location and encryption method for each browser.
 
+## Credits
+
+This package is based on the excellent [chrome-cookies-secure](https://github.com/bertrandom/chrome-cookies-secure) by Bertrand Fan and Reece Daniels. This version extends the original work to include full Microsoft Edge support alongside Chrome.
+
 ## License
 
 This software is free to use under the MIT license. See the [LICENSE file][] for license text and copyright information.
 
-[LICENSE file]: https://github.com/bertrandom/chrome-cookies-secure/blob/master/LICENSE.md
+[LICENSE file]: https://github.com/itai/edge-cookies-secure/blob/master/LICENSE.md

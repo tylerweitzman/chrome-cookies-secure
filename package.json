@@ -1,6 +1,6 @@
 {
-  "name": "chrome-cookies-secure",
-  "version": "3.0.0-beta.1",
+  "name": "edge-cookies-secure",
+  "version": "1.0.0",
   "description": "Extract encrypted Google Chrome and Microsoft Edge cookies for a url on a Mac, Linux or Windows",
   "types": "index.d.ts",
   "keywords": [
@@ -19,7 +19,7 @@
   "scripts": {
     "test": "mocha tests/index.test.js -t 5000"
   },
-  "author": "Bertrand Fan <bert@bert.org> (https://bert.org/), Reece Daniels <rubengmurray@gmail.com>",
+  "author": "Bertrand Fan <bert@bert.org> (https://bert.org/), Reece Daniels <rubengmurray@gmail.com>, Updated with Edge support",
   "license": "MIT",
   "os": [
     "darwin",
@@ -28,7 +28,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/bertrandom/chrome-cookies-secure.git"
+    "url": "git+https://github.com/itai/edge-cookies-secure.git"
   },
   "dependencies": {
     "int": "0.2.0",
